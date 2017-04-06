@@ -3171,7 +3171,7 @@ public class TcpCommunicationSpi extends IgniteSpiAdapter implements Communicati
                     if (log.isDebugEnabled())
                         log.debug("Client creation failed [addr=" + addr + ", err=" + e + ']');
 
-                    U.debug(log, "Client creation failed [addr=" + addr + ", err=" + e + ']');
+                    System.err.println("Client creation failed [addr=" + addr + ", err=" + e + ']');
 
                     boolean failureDetThrReached = timeoutHelper.checkFailureTimeoutReached(e);
 
@@ -3199,7 +3199,7 @@ public class TcpCommunicationSpi extends IgniteSpiAdapter implements Communicati
                         continue;
                     }
                     else {
-                        U.debug(log, "Will not reconnect: " + e);
+                        System.err.println("Will not reconnect: " + e);
                     }
 
                     break;
