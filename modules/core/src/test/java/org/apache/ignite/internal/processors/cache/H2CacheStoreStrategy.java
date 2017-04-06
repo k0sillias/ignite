@@ -75,8 +75,13 @@ public class H2CacheStoreStrategy implements TestCacheStoreStrategy {
      * @throws IgniteCheckedException If failed.
      */
     public H2CacheStoreStrategy() throws IgniteCheckedException {
+        Server srv = null;
+
         try {
-            Server.createTcpServer().start();
+            srv = Server.createTcpServer("-trace").start();
+
+            U.debug("Created H2 server: " + srv.getStatus());
+
             dataSrc = H2CacheStoreSessionListenerFactory.createDataSource();
 
             try (Connection conn = connection()) {
@@ -86,6 +91,10 @@ public class H2CacheStoreStrategy implements TestCacheStoreStrategy {
             }
         }
         catch (SQLException e) {
+            if (srv != null) {
+                U.debug("Exception caught, server: " + srv.getStatus());
+            }
+
             throw new IgniteCheckedException(e);
         }
     }
