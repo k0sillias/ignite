@@ -54,6 +54,7 @@ import org.apache.ignite.internal.util.lang.GridCursor;
 import org.apache.ignite.internal.util.typedef.X;
 import org.apache.ignite.internal.util.typedef.internal.SB;
 import org.apache.ignite.internal.util.typedef.internal.U;
+import org.apache.ignite.lang.IgniteInClosure;
 import org.apache.ignite.testframework.GridTestUtils;
 import org.apache.ignite.testframework.junits.common.GridCommonAbstractTest;
 import org.jetbrains.annotations.Nullable;
@@ -1451,7 +1452,7 @@ public class BPlusTreeSelfTest extends GridCommonAbstractTest {
         }
 
         /** {@inheritDoc} */
-        @Override protected int compare(BPlusIO<Long> io, long pageAddr, int idx, Long n2)
+        @Override protected int compare(BPlusIO<Long> io, long pageAddr, int idx, Long n2, IgniteInClosure c)
             throws IgniteCheckedException {
             Long n1 = io.getLookupRow(this, pageAddr, idx);
 

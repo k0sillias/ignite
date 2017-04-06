@@ -31,6 +31,7 @@ import org.apache.ignite.internal.processors.query.h2.database.io.H2ExtrasInnerI
 import org.apache.ignite.internal.processors.query.h2.database.io.H2ExtrasLeafIO;
 import org.apache.ignite.internal.processors.query.h2.opt.GridH2Row;
 import org.apache.ignite.internal.util.typedef.internal.U;
+import org.apache.ignite.lang.IgniteInClosure;
 import org.h2.result.SearchRow;
 import org.h2.table.IndexColumn;
 import org.h2.value.Value;
@@ -159,7 +160,7 @@ public abstract class H2Tree extends BPlusTree<SearchRow, GridH2Row> {
 
     /** {@inheritDoc} */
     @Override protected int compare(BPlusIO<SearchRow> io, long pageAddr, int idx,
-        SearchRow row) throws IgniteCheckedException {
+        SearchRow row, IgniteInClosure c1) throws IgniteCheckedException {
         if (inlineSize() == 0)
             return compareRows(getRow(io, pageAddr, idx), row);
         else {

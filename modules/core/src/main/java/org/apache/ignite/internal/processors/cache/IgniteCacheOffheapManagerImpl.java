@@ -1326,7 +1326,7 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
          * @param link Link.
          * @param rowData Required row data.
          */
-        DataRow(int hash, long link, CacheDataRowAdapter.RowData rowData) {
+        DataRow(int hash, long link, CacheDataRowAdapter.RowData rowData, long addr) {
             super(link);
 
             this.hash = hash;
@@ -1335,7 +1335,11 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
 
             try {
                 // We can not init data row lazily because underlying buffer can be concurrently cleared.
-                initFromLink(cctx, rowData);
+                if (addr == 0L)
+                    initFromLink(cctx, rowData);
+                else {
+                    initFromLink(addr, cctx, rowData);
+                }
             }
             catch (IgniteCheckedException e) {
                 throw new IgniteException(e);
@@ -1422,7 +1426,7 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
         }
 
         /** {@inheritDoc} */
-        @Override protected int compare(BPlusIO<CacheSearchRow> io, long pageAddr, int idx, CacheSearchRow row)
+        @Override protected int compare(BPlusIO<CacheSearchRow> io, long pageAddr, int idx, CacheSearchRow row, IgniteInClosure c)
             throws IgniteCheckedException {
             int hash = ((RowLinkIO)io).getHash(pageAddr, idx);
 
@@ -1435,7 +1439,7 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
 
             assert row.key() != null : row;
 
-            return compareKeys(row.key(), link);
+            return compareKeys(row.key(), link, hash, c);
         }
 
         /** {@inheritDoc} */
@@ -1448,7 +1452,7 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
                 (CacheDataRowAdapter.RowData)flags :
                 CacheDataRowAdapter.RowData.FULL;
 
-            return rowStore.dataRow(hash, link, x);
+            return rowStore.dataRow(hash, link, null, 0);
         }
 
         /**
@@ -1457,7 +1461,7 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
          * @return Compare result.
          * @throws IgniteCheckedException If failed.
          */
-        private int compareKeys(KeyCacheObject key, final long link) throws IgniteCheckedException {
+        private int compareKeys(KeyCacheObject key, final long link, int hash, IgniteInClosure c) throws IgniteCheckedException {
             byte[] bytes = key.valueBytes(cctx.cacheObjectContext());
 
             final long pageId = pageId(link);
@@ -1506,6 +1510,12 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
 
                             if (b1 != b2)
                                 return b1 > b2 ? 1 : -1;
+                        }
+
+                        if (c != null) {
+                            CacheDataRowAdapter.RowData x = CacheDataRowAdapter.RowData.NO_KEY;
+
+                            c.apply(rowStore.dataRow(hash, link, x, pageAddr + data.offset()));
                         }
 
                         return 0;
@@ -1576,7 +1586,7 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
          * @return Search row.
          */
         private CacheSearchRow keySearchRow(int hash, long link) {
-            return new DataRow(hash, link, CacheDataRowAdapter.RowData.KEY_ONLY);
+            return new DataRow(hash, link, CacheDataRowAdapter.RowData.KEY_ONLY, 0);
         }
 
         /**
@@ -1585,8 +1595,8 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
          * @param rowData Required row data.
          * @return Data row.
          */
-        private CacheDataRow dataRow(int hash, long link, CacheDataRowAdapter.RowData rowData) {
-            return new DataRow(hash, link, rowData);
+        private CacheDataRow dataRow(int hash, long link, CacheDataRowAdapter.RowData rowData, long addr) {
+            return new DataRow(hash, link, rowData, addr);
         }
     }
 
@@ -1821,7 +1831,7 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
         }
 
         /** {@inheritDoc} */
-        @Override protected int compare(BPlusIO<PendingRow> io, long pageAddr, int idx, PendingRow row)
+        @Override protected int compare(BPlusIO<PendingRow> io, long pageAddr, int idx, PendingRow row, IgniteInClosure c)
             throws IgniteCheckedException {
             long expireTime = ((PendingRowIO)io).getExpireTime(pageAddr, idx);
 

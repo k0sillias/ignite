@@ -84,6 +84,10 @@ public class CacheDataRowAdapter implements CacheDataRow {
         this.expireTime = expireTime;
     }
 
+    public final void initFromLink(long addr, GridCacheContext<?, ?> cctx, RowData rowData) throws IgniteCheckedException {
+        readFullRow(cctx.cacheObjectContext(), addr, rowData);
+    }
+
     /**
      * Read row from data pages.
      *
