@@ -3209,17 +3209,22 @@ public class TcpCommunicationSpi extends IgniteSpiAdapter implements Communicati
             assert errs != null;
 
             if (X.hasCause(errs, ConnectException.class))
-                LT.warn(log, "Failed to connect to a remote node " +
+                log.warning("Failed to connect to a remote node " +
                     "(make sure that destination node is alive and " +
                     "operating system firewall is disabled on local and remote hosts) " +
                     "[addrs=" + addrs + ']');
 
-            if (getSpiContext().node(node.id()) != null && CU.clientNode(node)) {
-                LT.warn(log, "TcpCommunicationSpi failed to establish connection to node, node will be dropped from " +
+            if (getSpiContext().node(node.id()) != null && (CU.clientNode(node) || !CU.clientNode(getLocalNode())) &&
+                X.hasCause(errs, ConnectException.class, SocketTimeoutException.class, HandshakeTimeoutException.class,
+                    IgniteSpiOperationTimeoutException.class)) {
+
+                log.warning("TcpCommunicationSpi failed to establish connection to node, node will be dropped from " +
                     "cluster [" +
                     "rmtNode=" + node +
                     ", err=" + errs +
                     ", connectErrs=" + Arrays.toString(errs.getSuppressed()) + ']');
+
+                errs.printStackTrace();
 
                 getSpiContext().failNode(node.id(), "TcpCommunicationSpi failed to establish connection to node [" +
                     "rmtNode=" + node +
