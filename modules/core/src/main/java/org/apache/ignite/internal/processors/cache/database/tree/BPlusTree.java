@@ -2212,6 +2212,9 @@ public abstract class BPlusTree<L, T extends L> extends DataStructure implements
      */
     private abstract class Get implements IgniteInClosure {
         /** */
+        private static final long serialVersionUID = 0L;
+
+        /** */
         long rmvId;
 
         /** Starting point root level. May be outdated. Must be modified only in {@link Get#init()}. */
