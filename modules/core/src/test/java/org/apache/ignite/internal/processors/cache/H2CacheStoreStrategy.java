@@ -54,6 +54,9 @@ public class H2CacheStoreStrategy implements TestCacheStoreStrategy {
     /** Pool to get {@link Connection}s from. */
     private final JdbcConnectionPool dataSrc;
 
+    /** */
+    private final int port;
+
     /** Script that creates CACHE table. */
     private static final String CREATE_CACHE_TABLE =
         "create table if not exists CACHE(k binary not null, v binary not null, PRIMARY KEY(k));";
@@ -78,11 +81,11 @@ public class H2CacheStoreStrategy implements TestCacheStoreStrategy {
         Server srv = null;
 
         try {
-            srv = Server.createTcpServer("-trace").start();
+            srv = Server.createTcpServer().start();
 
-            U.debug("Created H2 server: " + srv.getStatus());
+            port = srv.getPort();
 
-            dataSrc = H2CacheStoreSessionListenerFactory.createDataSource();
+            dataSrc = H2CacheStoreSessionListenerFactory.createDataSource(port);
 
             try (Connection conn = connection()) {
                 RunScript.execute(conn, new StringReader(CREATE_CACHE_TABLE));
@@ -91,11 +94,8 @@ public class H2CacheStoreStrategy implements TestCacheStoreStrategy {
             }
         }
         catch (SQLException e) {
-            if (srv != null) {
-                U.debug("Exception caught, server: " + srv.getStatus());
-            }
-
-            throw new IgniteCheckedException(e);
+            throw new IgniteCheckedException("Failed to set up cache store strategy" +
+                (srv == null ? "" : ": " + srv.getStatus()), e);
         }
     }
 
@@ -251,7 +251,7 @@ public class H2CacheStoreStrategy implements TestCacheStoreStrategy {
 
     /** {@inheritDoc} */
     @Override public void updateCacheConfiguration(CacheConfiguration<Object, Object> cfg) {
-        cfg.setCacheStoreSessionListenerFactories(new H2CacheStoreSessionListenerFactory());
+        cfg.setCacheStoreSessionListenerFactories(new H2CacheStoreSessionListenerFactory(port));
     }
 
     /** {@inheritDoc} */
@@ -269,11 +269,23 @@ public class H2CacheStoreStrategy implements TestCacheStoreStrategy {
 
     /** Serializable {@link Factory} producing H2 backed {@link CacheStoreSessionListener}s. */
     public static class H2CacheStoreSessionListenerFactory implements Factory<CacheStoreSessionListener> {
+        /** */
+        private int port;
+
+        /**
+         * @param port Port.
+         */
+        public H2CacheStoreSessionListenerFactory(int port) {
+            this.port = port;
+        }
+
         /**
          * @return Connection pool
          */
-        static JdbcConnectionPool createDataSource() {
-            JdbcConnectionPool pool = JdbcConnectionPool.create("jdbc:h2:tcp://localhost/mem:TestDb;LOCK_MODE=0", "sa", "");
+        static JdbcConnectionPool createDataSource(int port) {
+            JdbcConnectionPool pool = JdbcConnectionPool.create("jdbc:h2:tcp://localhost:" + port +
+                "/mem:TestDb;LOCK_MODE=0", "sa", "");
+
             pool.setMaxConnections(100);
             return pool;
         }
@@ -281,7 +293,7 @@ public class H2CacheStoreStrategy implements TestCacheStoreStrategy {
         /** {@inheritDoc} */
         @Override public CacheStoreSessionListener create() {
             CacheJdbcStoreSessionListener lsnr = new CacheJdbcStoreSessionListener();
-            lsnr.setDataSource(createDataSource());
+            lsnr.setDataSource(createDataSource(port));
             return lsnr;
         }
     }
