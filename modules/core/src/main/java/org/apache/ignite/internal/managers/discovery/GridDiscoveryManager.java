@@ -1948,6 +1948,8 @@ public class GridDiscoveryManager extends GridManagerAdapter<DiscoverySpi> {
             return;
 
         try {
+            U.dumpStack(log, "Failing node: " + nodeId + ", warn=" + warning);
+
             getSpi().failNode(nodeId, warning);
         }
         finally {

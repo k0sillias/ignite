@@ -4653,6 +4653,9 @@ class ServerImpl extends TcpDiscoveryImpl {
             }
 
             if (msg.verified()) {
+                if (locNode.id().equals(failedNodeId))
+                    U.debug(log, ">>>>>>> received self-kill message: " + msg);
+
                 failedNode = ring.removeNode(failedNodeId);
 
                 interruptPing(failedNode);
