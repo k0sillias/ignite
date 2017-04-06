@@ -2364,6 +2364,9 @@ public abstract class BPlusTree<L, T extends L> extends DataStructure implements
      */
     private final class GetOne extends Get {
         /** */
+        private static final long serialVersionUID = 0L;
+
+        /** */
         Object x;
 
         /**
@@ -2393,6 +2396,9 @@ public abstract class BPlusTree<L, T extends L> extends DataStructure implements
      * Get a cursor for range.
      */
     private final class GetCursor extends Get {
+        /** */
+        private static final long serialVersionUID = 0L;
+
         /** */
         ForwardCursor cursor;
 
@@ -2430,6 +2436,9 @@ public abstract class BPlusTree<L, T extends L> extends DataStructure implements
      * Put operation.
      */
     private final class Put extends Get {
+        /** */
+        private static final long serialVersionUID = 0L;
+
         /** Right child page ID for split row. */
         long rightId;
 
@@ -2766,6 +2775,9 @@ public abstract class BPlusTree<L, T extends L> extends DataStructure implements
      */
     private final class Invoke extends Get {
         /** */
+        private static final long serialVersionUID = 0L;
+
+        /** */
         Object x;
 
         /** */
@@ -3065,6 +3077,9 @@ public abstract class BPlusTree<L, T extends L> extends DataStructure implements
      * Remove operation.
      */
     private final class Remove extends Get implements ReuseBag {
+        /** */
+        private static final long serialVersionUID = 0L;
+
         /** We may need to lock part of the tree branch from the bottom to up for multiple levels. */
         Tail<L> tail;
 
