@@ -3214,9 +3214,7 @@ public class TcpCommunicationSpi extends IgniteSpiAdapter implements Communicati
                     "operating system firewall is disabled on local and remote hosts) " +
                     "[addrs=" + addrs + ']');
 
-            if (getSpiContext().node(node.id()) != null && (CU.clientNode(node) || !CU.clientNode(getLocalNode())) &&
-                X.hasCause(errs, ConnectException.class, SocketTimeoutException.class, HandshakeTimeoutException.class,
-                    IgniteSpiOperationTimeoutException.class)) {
+            if (getSpiContext().node(node.id()) != null && CU.clientNode(node)) {
                 LT.warn(log, "TcpCommunicationSpi failed to establish connection to node, node will be dropped from " +
                     "cluster [" +
                     "rmtNode=" + node +
