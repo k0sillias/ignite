@@ -141,7 +141,7 @@ public abstract class GridCacheMapEntry extends GridMetadataAwareAdapter impleme
 
     /** Start version. */
     @GridToStringInclude
-    protected long startVer;
+    protected final long startVer;
 
     /** Version. */
     @GridToStringInclude
@@ -188,15 +188,15 @@ public abstract class GridCacheMapEntry extends GridMetadataAwareAdapter impleme
         this.hash = hash;
         this.cctx = cctx;
 
-        this.val = cctx.kernalContext().cacheObjects().prepareForCache(val, cctx);
+        val = cctx.kernalContext().cacheObjects().prepareForCache(val, cctx);
 
-//        synchronized (this) {
-//            value(val);
-//        }
+        synchronized (this) {
+            value(val);
+        }
 
-//        ver = cctx.versions().next();
-//
-//        startVer = ver.order();
+        ver = cctx.versions().next();
+
+        startVer = ver.order();
     }
 
     /** {@inheritDoc} */
@@ -294,7 +294,7 @@ public abstract class GridCacheMapEntry extends GridMetadataAwareAdapter impleme
      * @return {@code True} if start version.
      */
     public boolean isStartVersion() {
-        return ver == null;//ver.nodeOrder() == cctx.localNode().order() && ver.order() == startVer;
+        return ver.nodeOrder() == cctx.localNode().order() && ver.order() == startVer;
     }
 
     /** {@inheritDoc} */
